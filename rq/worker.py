@@ -241,10 +241,7 @@ class BaseWorker:
             self.pid: Optional[int] = os.getpid()
             try:
                 connection.client_setname(self.name)
-            except redis.exceptions.ResponseError:
-                warnings.warn('CLIENT SETNAME command not supported, setting ip_address to unknown', Warning)
-                self.ip_address = 'unknown'
-            else:
+
                 client_addresses = [
                     client['addr'] for client in connection.client_list() if client.get('name') == self.name
                 ]
@@ -253,6 +250,11 @@ class BaseWorker:
                 else:
                     warnings.warn('CLIENT LIST command not supported, setting ip_address to unknown', Warning)
                     self.ip_address = 'unknown'
+            except redis.exceptions.ResponseError as e:
+                warnings.warn(e)
+                warnings.warn('CLIENT SETNAME command not supported, setting ip_address to unknown', Warning)
+                self.ip_address = 'unknown'
+                    
         else:
             self.hostname = None
             self.pid = None
